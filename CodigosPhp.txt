@@ -1,0 +1,1351 @@
+Tabela Cliente:
+//config.php
+<?php
+##salvar como config.php
+
+##arquivo que contem variaveis que serão usadas no arquivo de configuração do BD
+
+define('HOST','localhost');
+define('USER','postgres');
+define('PASSWORD','123456');
+define('BASE','web1');
+
+?>
+----------------------------------------------------------------------------------------------------------
+//testandoconexao.php
+<?php
+define('HOST','localhost');
+define('USER','postgres');
+define('PASSWORD','123456');
+define('BASE','web1');
+
+try {
+
+$con = new pdo('pgsql:host=' . HOST . ';dbname=' . BASE, USER, PASSWORD);
+echo "conexao ok";
+
+} catch (PDFException $e) {
+
+echo "erro gerado" . $e->getMessage();
+
+}
+
+?>
+<?php
+------------------------------------------------------------------------------------------------------------------------------------
+/**
+ *salvar como DB.php
+ *arquivo que faz conexão com o banco de dados
+ */
+
+require_once 'config.php';
+
+class DB {
+    private static $instance;
+
+    public static function getInstance() {
+        if (!isset(self::$instance)) {
+            try {
+                self::$instance = new PDO('pgsql:host=' . HOST . '; dbname=' . BASE, USER,PASSWORD);
+                self::$instance->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+                self::$instance->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_OBJ);
+            } catch (PDOException $e) {
+                echo $e->getMessage();
+            }
+        }
+        return self::$instance;
+    }
+
+    public static function prepare($sql) {
+        return self::getInstance()->prepare($sql);
+    }
+}
+?>
+--------------------------------------------------------------------------------------------------------------
+
+<?php
+##salvar como CrudClientes.php
+##arquivo que implementa a tabela e seus atributos, acessa os metodos get e set
+require_once 'DB.php';    //inclui arquivo DB
+
+ abstract class CrudClientes extends DB {   //faz herança do arquivo DB
+    
+    //Nome da tabela e Atributos
+    protected $cliente;
+    public $nomecliente;
+    public $cpfcliente;
+    public $rgcliente;
+    public $sexocliente;
+    public $datanascimento;
+    public $debito;
+
+    //Funções
+    
+    public function setNomecliente($nomecliente) {
+        $this->nomecliente  = $nomecliente;
+    }
+    public function getNomecliente() {
+        return $this->nomecliente;
+    }    
+    
+    public function setCpfcliente($cpfcliente) {
+        $this->cpfcliente = $cpfcliente;
+    }
+    public function getCpfcliente() {
+        return $this->cpfcliente;
+    }
+
+    public function setRgcliente($rgcliente) {
+        $this->rgcliente = $rgcliente;
+    }
+    public function getRgcliente() {
+        return $this->rgcliente;
+    }
+
+    public function setSexocliente($sexocliente) {
+        $this->sexocliente = $sexocliente;
+    }
+    public function getSexocliente() {
+        return $this->sexocliente;
+    }
+
+    public function setDatanascimento($datanascimento) {
+        $this->datanascimento = $datanascimento;
+    }
+    public function getDatanascimento() {
+        return $this->datanascimento;
+    }
+     public function setDebito($debito) {
+        $this->debito = $debito;
+    }
+    public function getDebito() {
+        return $this->debito;
+    }
+}
+
+?>
+
+------------------------------------------------------------------------------------------------------------------------------------
+//Arquivo de classes
+<?php
+
+/**
+ * Salvar como Clientes.php
+ * herda da classe crudClientes
+ * contem metodos basicos para criar, deletar, Lê e apagar dados no BD
+ */
+
+require_once 'CrudClientes.php';
+
+ class Clientes extends CrudClientes{
+    
+    protected $tabela = 'cliente';  //define a tabela do banco
+
+      
+    //busca 1 item
+    public function findUnit($idcliente) {
+        $sql = "SELECT * FROM $this->tabela WHERE idcliente = :idcliente";
+        $stm = DB::prepare($sql);
+        $stm->bindParam(':idcliente', $idcliente, PDO::PARAM_INT);
+        $stm->execute();
+        return $stm->fetch();
+    }
+    //busca todos os itens
+    public function findAll() {
+        $sql = "SELECT * FROM $this->tabela";
+        $stm = DB::prepare($sql);
+        $stm->execute();
+        return $stm->fetchAll();
+    }
+    
+     //faz insert   
+    public function insert() {
+        $sql = "INSERT INTO $this->tabela (nomecliente, cpfcliente, rgcliente, sexocliente, datanascimento, debito) VALUES ( :nomecliente, :cpfcliente, :rgcliente, :sexocliente, :datanascimento, :debito)";
+        $stm = DB::prepare($sql);
+        $stm->bindParam(':nomecliente', $this->nomecliente);
+        $stm->bindParam(':cpfcliente', $this->cpfcliente);
+        $stm->bindParam(':rgcliente', $this->rgcliente);
+        $stm->bindParam(':sexocliente', $this->sexocliente);
+        $stm->bindParam(':datanascimento', $this->datanascimento);
+        $stm->bindParam(':debito', $this->debito);
+        return $stm->execute();
+    }
+    
+    //update de itens
+    public function update($idcliente) {
+        $sql = "UPDATE $this->tabela SET  nomecliente = :nomecliente, cpfcliente = :cpfcliente, rgcliente = :rgcliente, sexocliente = :sexocliente, datanascimento = :datanascimento, debito = :debito WHERE idcliente = :idcliente";
+        $stm = DB::prepare($sql);
+        $stm->bindParam(':idcliente', $idcliente, PDO::PARAM_INT);
+        $stm->bindParam(':nomecliente', $this->nomecliente);
+        $stm->bindParam(':cpfcliente', $this->cpfcliente);
+        $stm->bindParam(':rgcliente', $this->rgcliente);
+        $stm->bindParam(':sexocliente', $this->sexocliente);
+        $stm->bindParam(':datanascimento', $this->datanascimento);
+        $stm->bindParam(':debito', $this->debito);
+        return $stm->execute();
+    }
+    
+//deleta  1 item
+    public function delete($idcliente) {
+        $sql = "DELETE FROM $this->tabela WHERE idcliente = :idcliente";
+        $stm = DB::prepare($sql);
+        $stm->bindParam(':idcliente', $idcliente, PDO::PARAM_INT);
+        return $stm->execute();
+    }
+    
+}
+?>
+
+------------------------------------------------------------------------------------------------------------------------------------
+
+//Cadastro
+<?php
+error_reporting(E_ALL);
+ini_set("display_errors", 1);
+
+
+    
+require_once 'Clientes.php';
+?>
+   
+<!DOCTYPE HTML>
+<html lang="pt-BR">
+<head>
+        <title>Cadastro de clientes - WEB I</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head>
+
+<body>
+   <?php
+     
+      $cliente = new Clientes;
+      if(isset($_POST['cadastrar'])):
+            $nomecliente = $_POST['nomecliente'];
+            $cpfcliente = $_POST['cpfcliente'];
+            $rgcliente = $_POST['rgcliente'];
+            $sexocliente = $_POST['sexocliente'];
+            $datanascimento = $_POST['datanascimento'];
+            $debito = $_POST['debito'];
+  
+            $cliente->setNomecliente($nomecliente);
+            $cliente->setCpfcliente($cpfcliente);
+            $cliente->setRgcliente($rgcliente);
+            $cliente->setSexocliente($sexocliente);
+            $cliente->setDatanascimento($datanascimento);
+            $cliente->setDebito($debito);
+
+            if($cliente->insert()){
+                echo "Cliente ". $nomecliente. " inserido com sucesso";
+            }
+      endif;
+    ?>
+        <form method='POST' action="">            
+            <br><label for='nomecliente'> Nome do cliente</label>
+            <br><input type="text" name="nomecliente"  placeholder="Digite o nome completo"/>
+            <br><label for='cpfcliente'> CPF </label>    
+            <br><input type="text" name="cpfcliente"/>
+            <br><label for='rgcliente'> RG </label>    
+            <br><input type="text" name="rgcliente"/>
+            <br><label for='sexocliente'> Sexo </label>    
+            <br><input type="text" name="sexocliente"/>
+            <br><label for='datanascimento'> Data de Nascimento </label>    
+            <br><input type="text" name="datanascimento"/>
+            <br><label for='debito'> Debito </label>    
+            <br><input type="text" name="debito"/>
+            <br><br> <input type="submit" value="Cadastrar">
+        
+        </form>
+    
+</body>
+</html>
+
+------------------------------------------------------------------------------------------------------------------------------------
+//Listar
+<?php
+error_reporting(E_ALL);
+ini_set("display_errors", 1);
+
+require_once 'Clientes.php';
+
+?>
+
+<!DOCTYPE HTML>
+<html lang="pt-BR">
+
+<head>
+        <title>Lista de clientes - WEB I</title>
+</head>
+
+<body>
+   
+    <!-- Inicio da tabela -->
+    <table class="table table-striped table-bordered table-hover">
+                <thead>
+                    <tr class="active">
+
+                        <th>NomeCliente</th>
+                        <th>CPFcliente</th>
+                        <th>RGcliente</th>
+                        <th>Sexocliente</th>
+                        <th>Datanascimento</th>
+                        <th>Debito</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                    <?php 
+                    
+                    $cliente=New Clientes;
+
+                    //exclusao de Usuario
+                    if (isset($_POST['excluir'])){
+                                            
+                        $idcliente = $_POST['idcliente'];
+                        
+                        $cliente->delete($idcliente);
+                    }
+                                                         
+                    
+                    
+
+                    foreach ($cliente->findAll() as $key => $value) { ?>
+          
+                    <tr>
+                        <td> <?php echo $value->nomecliente;?> </td>
+
+                        <td> <?php echo $value->cpfcliente;?> </td>
+
+                        <td> <?php echo $value->rgcliente;?> </td>
+
+                        <td> <?php echo $value->sexocliente;?> </td>
+
+                        <td> <?php echo $value->datanascimento;?> </td>
+
+                        <td> <?php echo $value->debito;?> </td>
+
+                        <td>
+
+                        <form method="post" action="AlterarCliente.php">
+                            <tr>
+                                <td><input name="idcliente" type="hidden" value="<?php echo $value->idcliente;?>"/> </td>          
+                                <td><input name="nomecliente" type="hidden" value="<?php echo $value->nomecliente;?>"/></td> 
+                                <td><input name="cpfcliente" type="hidden" value="<?php echo $value->cpfcliente;?>"/></td> 
+                                <td><input name="rgcliente" type="hidden" value="<?php echo $value->rgcliente;?>"/></td> 
+                                <td><input name="sexocliente" type="hidden" value="<?php echo $value->sexocliente;?>"/></td> 
+                                <td><input name="datanascimento" type="hidden" value="<?php echo $value->datanascimento;?>"/></td> 
+                                <td><input name="debito" type="hidden" value="<?php echo $value->debito;?>"/></td> 
+                            </tr>
+                                <td><button name="alterar" type="submit">Alterar</button></td>
+
+                         </form>
+<td>
+                            <form method="post" >
+                                <input name="idcliente" type="hidden" value="<?php echo $value->idcliente;?>"/>
+                                <button name="excluir" type="submit" >Excluir</button>
+                            </form>
+                        </td>
+
+                    </tr>
+                    
+                    <?php } ?>
+                </tbody>
+            </table>
+            <!-- Fim da tabela -->
+
+
+
+
+    </form>
+
+</body>
+</html>
+
+------------------------------------------------------------------------------------------------------------------------------------
+//Alterar
+<?php
+error_reporting(E_ALL);
+ini_set("display_errors", 1);
+
+require_once 'Clientes.php';
+?>
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+
+	<title>Alteração de clientes - WEB I</title>
+
+</head>
+
+<body>
+	<?php
+		//Alterar Cliente
+
+		$idcliente = $_POST['idcliente'];
+		$nomecliente = $_POST['nomecliente'];
+		$cpfcliente = $_POST['cpfcliente'];
+		$rgcliente = $_POST['rgcliente'];
+		$sexocliente = $_POST['sexocliente'];
+		$datanascimento = $_POST['datanascimento'];
+		$debito = $_POST['debito'];
+
+
+		if (isset($_POST['alterarDados']));
+		{
+		 $cliente = new Clientes;
+
+		 	$cliente->setNomecliente($nomecliente);
+		 	$cliente->setCpfcliente($cpfcliente);
+		 	$cliente->setRgcliente($rgcliente);
+		 	$cliente->setSexocliente($sexocliente);
+		 	$cliente->setDatanascimento($datanascimento);
+		 	$cliente->setDebito($debito);
+		 	$cliente->update($idcliente);
+
+		 }
+
+		//endif;
+	?>
+
+	<form method='post' action="">
+		<br><label for='nomecliente'> Nome do cliente</label>
+            <br><input type="text" name="nomecliente" value="<?php echo $nomecliente;?>"/>
+		<br><br><label for='cpfcliente'> CPF do cliente</label>
+			<br><input type="text" name="cpfcliente" value="<?php echo $cpfcliente;?>"/>
+		<br><br><label for='rgcliente'> RG do cliente</label>
+			<br><input type="text" name="rgcliente" value="<?php echo $rgcliente;?>"/>
+		<br><br><label for='sexocliente'> Sexo do cliente</label>
+			<br><input type="text" name="sexocliente" value="<?php echo $sexocliente;?>"/>
+		<br><br><label for='datanascimento'> Data de nascimento</label>
+			<br><input type="text" name="datanascimento" value="<?php echo $datanascimento;?>"/>
+		<br><br><label for='debito'> Debito</label>
+			<br><input type="text" name="debito" value="<?php echo $debito;?>"/>
+		<input type="hidden" name="idcliente" value="<?php echo $idcliente;?>"/>
+		<br><br><input type="submit" value="AlterarDados"/><br>
+		<br><br><br><a href=ListarCliente.php>Lista de clientes</a>
+
+	</form>
+						<!-- Fim da tabela -->
+
+</body>
+</html>
+
+------------------------------------------------------------------------------------------------------------------------------------
+
+
+Tabela Produto:
+
+<?php
+##salvar como CrudProdutos.php
+##arquivo que implementa a tabela e seus atributos, acessa os metodos get e set
+require_once 'DB.php';    //inclui arquivo DB
+
+ abstract class CrudProdutos extends DB {   //faz herança do arquivo DB
+    
+    //Nome da tabela e Atributos
+    protected $produto;
+    public $nomedoproduto;
+    public $quantidadeproduto;
+    public $datavencimento;
+    
+
+
+    public function setNomedoproduto($nomedoproduto) {
+        $this->nomedoproduto = $nomedoproduto;
+    }
+    public function getNomedoproduto() {
+        return $this->nomedoproduto;
+    }
+
+    public function setQuantidadeproduto($quantidadeproduto) {
+        $this->quantidadeproduto = $quantidadeproduto;
+    }
+    public function getQuantidadeproduto() {
+        return $this->quantidadeproduto;
+    }
+
+    public function setDatavencimento($datavencimento) {
+        $this->datavencimento = $datavencimento;
+    }
+    public function getDatavencimento() {
+        return $this->datavencimento;
+    }
+    
+}
+
+?>
+--------------------------------------------------------------------------------------------------------------------------
+
+//arquivos de classe
+<?php
+
+/**
+ * Salvar como Produtos.php
+ * herda da classe crudProdutos
+ * contem metodos basicos para criar, deletar, Lê e apagar dados no BD
+ */
+
+require_once 'CrudProdutos.php';
+
+ class Produtos extends CrudProdutos{
+    
+    protected $tabela = 'produto';  //define a tabela do banco
+
+      
+    //busca 1 item
+    public function findUnit($idproduto) {
+        $sql = "SELECT * FROM $this->tabela WHERE idproduto = :idproduto";
+        $stm = DB::prepare($sql);
+        $stm->bindParam(':idproduto', $idproduto, PDO::PARAM_INT);
+        $stm->execute();
+        return $stm->fetch();
+    }
+    //busca todos os itens
+    public function findAll() {
+        $sql = "SELECT * FROM $this->tabela";
+        $stm = DB::prepare($sql);
+        $stm->execute();
+        return $stm->fetchAll();
+    }
+    
+     //faz insert   
+    public function insert() {
+        $sql = "INSERT INTO $this->tabela (nomedoproduto, quantidadeproduto, datavencimento) VALUES ( :nomedoproduto, :quantidadeproduto, :datavencimento)";
+        $stm = DB::prepare($sql);
+        $stm->bindParam(':nomedoproduto', $this->nomedoproduto);
+        $stm->bindParam(':quantidadeproduto', $this->quantidadeproduto);
+        $stm->bindParam(':datavencimento', $this->datavencimento);
+        return $stm->execute();
+    }
+    
+    //update de itens
+    public function update($idproduto) {
+        $sql = "UPDATE $this->tabela SET  nomedoproduto = :nomedoproduto, quantidadeproduto = :quantidadeproduto, datavencimento = :datavencimento WHERE idproduto = :idproduto";
+        $stm = DB::prepare($sql);
+        $stm->bindParam(':idproduto', $idproduto, PDO::PARAM_INT);
+        $stm->bindParam(':nomedoproduto', $this->nomedoproduto);
+        $stm->bindParam(':quantidadeproduto', $this->quantidadeproduto);
+        $stm->bindParam(':datavencimento', $this->datavencimento);
+        return $stm->execute();
+    }
+    
+//deleta  1 item
+    public function delete($idproduto) {
+        $sql = "DELETE FROM $this->tabela WHERE idproduto = :idproduto";
+        $stm = DB::prepare($sql);
+        $stm->bindParam(':idproduto', $idproduto, PDO::PARAM_INT);
+        return $stm->execute();
+    }
+    
+}
+?>
+------------------------------------------------------------------------------------------------------------------------------------------
+
+//Cadastro
+<?php
+error_reporting(E_ALL);
+ini_set("display_errors", 1);
+
+
+    
+require_once 'Produtos.php';
+?>
+   
+<!DOCTYPE HTML>
+<html lang="pt-BR">
+<head>
+        <title>Cadastro de produtos - WEB I</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head>
+
+<body>
+   <?php
+     
+      $produto = new Produtos;
+      if(isset($_POST['cadastrar'])):
+            $nomedoproduto = $_POST['nomedoproduto'];
+            $quantidadeproduto = $_POST['quantidadeproduto'];
+            $datavencimento = $_POST['datavencimento'];
+            
+  
+            $produto->setNomedoproduto($nomedoproduto);
+            $produto->setQuantidadeproduto($quantidadeproduto);
+            $produto->setDatavencimento($datavencimento);
+            
+
+            if($produto->insert()){
+                echo "Produto ". $nomedoproduto. " inserido com sucesso";
+            }
+      endif;
+    ?>
+        <form method='post' action="">            
+            <br><label for='nomedoproduto'> Nome do produto</label>
+            <br><input type="text" name="nomedoproduto"  placeholder="Digite o nome do produto"/>
+            <br><label for='quantidadeproduto'> Quantidade </label>    
+            <br><input type="text" name="quantidadeproduto"/>
+            <br><label for='datavencimento'> Data de vencimento </label>    
+            <br><input type="text" name="datavencimento"/>
+            <br><br> <input type="submit" value="Cadastrar">
+            <br><br><br><a href=ListarProduto.php>Lista de produtos</a>
+        
+        </form>
+    
+</body>
+</html>
+---------------------------------------------------------------------------------------------------------------------------
+//Listar
+<?php
+error_reporting(E_ALL);
+ini_set("display_errors", 1);
+
+require_once 'Produtos.php';
+
+?>
+
+<!DOCTYPE HTML>
+<html lang="pt-BR">
+
+<head>
+        <title>Lista de produtos - WEB I</title>
+</head>
+
+<body>
+   
+    <!-- Inicio da tabela -->
+    <table class="table table-striped table-bordered table-hover">
+                <thead>
+                    <tr class="active">
+
+                        <th>Nome do produto</th>
+                        <th>Quantidade de produtos</th>
+                        <th>Data de vencimento</th>
+                        
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                    <?php 
+                    
+                    $produto=New Produtos;
+
+                    //exclusao de Usuario
+                    if (isset($_POST['excluir'])){
+                                            
+                        $idproduto = $_POST['idproduto'];
+                        
+                        $produto->delete($idproduto);
+                    }
+                                                         
+                    
+                    
+
+                    foreach ($produto->findAll() as $key => $value) { ?>
+          
+                    <tr>
+                        <td> <?php echo $value->nomedoproduto;?> </td>
+
+                        <td> <?php echo $value->quantidadeproduto;?> </td>
+
+                        <td> <?php echo $value->datavencimento;?> </td>
+
+
+                        <td>
+
+                        <form method="post" action="AlterarProduto.php">
+                            <tr>
+                                <td><input name="idproduto" type="hidden" value="<?php echo $value->idproduto;?>"/> </td>          
+                                <td><input name="nomedoproduto" type="hidden" value="<?php echo $value->nomedoproduto;?>"/></td> 
+                                <td><input name="quantidadeproduto" type="hidden" value="<?php echo $value->quantidadeproduto;?>"/></td> 
+                                <td><input name="datavencimento" type="hidden" value="<?php echo $value->datavencimento;?>"/></td> 
+                                
+                            </tr>
+                                <td><button name="alterar" type="submit">Alterar</button></td>
+
+                         </form>
+<td>
+                            <form method="post" >
+                                <input name="idproduto" type="hidden" value="<?php echo $value->idproduto;?>"/>
+                                <button name="excluir" type="submit" >Excluir</button>
+                            </form>
+                        </td>
+
+                    </tr>
+                    
+                    <?php } ?>
+                </tbody>
+            </table>
+            <!-- Fim da tabela -->
+
+
+
+
+    </form>
+
+</body>
+</html>
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+//Alterar
+<?php
+error_reporting(E_ALL);
+ini_set("display_errors", 1);
+
+require_once 'Produtos.php';
+?>
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+
+	<title>Alteração de produtos - WEB I</title>
+
+</head>
+
+<body>
+	<?php
+		//Alterar Cliente
+
+		$idproduto = $_POST['idproduto'];
+		$nomedoproduto = $_POST['nomedoproduto'];
+		$quantidadeproduto = $_POST['quantidadeproduto'];
+		$datavencimento = $_POST['datavencimento'];
+
+
+		if (isset($_POST['alterarDados']));
+		{
+		 $produtos = new Produtos;
+
+		 	$produtos->setNomedoproduto($nomedoproduto);
+		 	$produtos->setQuantidadeproduto($quantidadeproduto);
+		 	$produtos->setDatavencimento($datavencimento);
+		 	$produtos->update($idproduto);
+
+		 }
+
+		//endif;
+	?>
+
+	<form method='post' action="">
+		<br><label for='nomedoproduto'> Nome do produto</label>
+            <br><input type="text" name="nomedoproduto" value="<?php echo $nomedoproduto;?>"/>
+		<br><br><label for='quantidadeproduto'> Quantidade</label>
+			<br><input type="text" name="quantidadeproduto" value="<?php echo $quantidadeproduto;?>"/>
+		<br><br><label for='datavencimento'> Data de vencimento</label>
+			<br><input type="text" name="datavencimento" value="<?php echo $datavencimento;?>"/>
+		<input type="hidden" name="idproduto" value="<?php echo $idproduto;?>"/>
+		<br><br><input type="submit" value="AlterarDados"/><br>
+		<br><br><br><a href=ListarProduto.php>Lista de produtos</a>
+
+	</form>
+						<!-- Fim da tabela -->
+
+</body>
+</html>
+-------------------------------------------------------------------------------------------------------------------------------
+
+
+Tabela Venda:
+
+<?php
+##salvar como CrudVendas.php
+##arquivo que implementa a tabela e seus atributos, acessa os metodos get e set
+require_once 'DB.php';    //inclui arquivo DB
+
+ abstract class CrudVendas extends DB {   //faz herança do arquivo DB
+    
+    //Nome da tabela e Atributos
+   protected $venda;
+    public $datavenda;
+    public $valortotal;
+
+
+    public function setDatavenda($datavenda) {
+        $this->datavenda = $datavenda;
+    }
+    public function getDatavenda() {
+        return $this->datavenda;
+    }
+
+    public function setValortotal($valortotal) {
+        $this->valortotal = $valortotal;
+    }
+    public function getValortotal() {
+        return $this->valortotal;
+    }
+    
+}
+
+?>
+-------------------------------------------------------------------------------------------------------------------------------
+
+//classe
+<?php
+
+/**
+ * Salvar como Vendas.php
+ * herda da classe crudVendas
+ * contem metodos basicos para criar, deletar, Lê e apagar dados no BD
+ */
+
+require_once 'CrudVendas.php';
+
+ class Vendas extends CrudVendas{
+    
+    protected $tabela = 'venda';  //define a tabela do banco
+
+      
+    //busca 1 item
+    public function findUnit($idvenda) {
+        $sql = "SELECT * FROM $this->tabela WHERE idvenda = :idvenda";
+        $stm = DB::prepare($sql);
+        $stm->bindParam(':idvenda', $idvenda, PDO::PARAM_INT);
+        $stm->execute();
+        return $stm->fetch();
+    }
+    //busca todos os itens
+    public function findAll() {
+        $sql = "SELECT * FROM $this->tabela";
+        $stm = DB::prepare($sql);
+        $stm->execute();
+        return $stm->fetchAll();
+    }
+    
+     //faz insert   
+    public function insert() {
+        $sql = "INSERT INTO $this->tabela (datavenda, valortotal) VALUES ( :datavenda, :valortotal)";
+        $stm = DB::prepare($sql);
+        $stm->bindParam(':datavenda', $this->datavenda);
+        $stm->bindParam(':valortotal', $this->valortotal);
+        return $stm->execute();
+    }
+    
+    //update de itens
+    public function update($idvenda) {
+        $sql = "UPDATE $this->tabela SET  datavenda = :datavenda, valortotal = :valortotal WHERE idvenda = :idvenda";
+        $stm = DB::prepare($sql);
+        $stm->bindParam(':idvenda', $idvenda, PDO::PARAM_INT);
+        $stm->bindParam(':datavenda', $this->datavenda);
+        $stm->bindParam(':valortotal', $this->valortotal);
+        return $stm->execute();
+    }
+    
+//deleta  1 item
+    public function delete($idvenda) {
+        $sql = "DELETE FROM $this->tabela WHERE idvenda = :idvenda";
+        $stm = DB::prepare($sql);
+        $stm->bindParam(':idvenda', $idvenda, PDO::PARAM_INT);
+        return $stm->execute();
+    }
+    
+}
+?>
+-------------------------------------------------------------------------------------------------------------------------------
+//Cadastro
+<?php
+error_reporting(E_ALL);
+ini_set("display_errors", 1);
+
+
+    
+require_once 'Vendas.php';
+?>
+   
+<!DOCTYPE HTML>
+<html lang="pt-BR">
+<head>
+        <title>Cadastro de vendas - WEB I</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head>
+
+<body>
+   <?php
+     
+      $venda = new Vendas;
+      if(isset($_POST['cadastrar'])):
+            $datavenda = $_POST['datavenda'];
+            $valortotal = $_POST['valortotal'];
+                   
+  
+            $venda->setDatavenda($datavenda);
+            $venda->setValortotal($valortotal);
+                    
+
+            if($venda->insert()){
+                echo "Venda do dia ". $datavenda. " inserida com sucesso";
+            }
+      endif;
+    ?>
+        <form method='post' action="">            
+            <br><label for='datavenda'> Data da venda</label>
+            <br><input type="text" name="datavenda"/>
+            <br><label for='valortotal'> Valor total da venda</label>    
+            <br><input type="text" name="valortotal"/>
+            <br><br> <input type="submit" value="Cadastrar">
+            <br><br><br><a href=ListarVenda.php>Lista de vendas</a>
+        
+        </form>
+    
+</body>
+</html>
+-----------------------------------------------------------------------------------------------------------------------------------------
+
+//Listar
+<?php
+error_reporting(E_ALL);
+ini_set("display_errors", 1);
+
+require_once 'Vendas.php';
+
+?>
+
+<!DOCTYPE HTML>
+<html lang="pt-BR">
+
+<head>
+        <title>Lista de vendas - WEB I</title>
+</head>
+
+<body>
+   
+    <!-- Inicio da tabela -->
+    <table class="table table-striped table-bordered table-hover">
+                <thead>
+                    <tr class="active">
+
+                        <th>Data da venda</th>
+                        <th>Valor total da venda</th>
+                       
+                        
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                    <?php 
+                    
+                    $venda=New Vendas;
+
+                    //exclusao de Usuario
+                    if (isset($_POST['excluir'])){
+                                            
+                        $idvenda = $_POST['idvenda'];
+                        
+                        $venda->delete($idvenda);
+                    }
+                                                         
+                    
+                    
+
+                    foreach ($venda->findAll() as $key => $value) { ?>
+          
+                    <tr>
+                        <td> <?php echo $value->datavenda;?> </td>
+
+                        <td> <?php echo $value->valortotal;?> </td>
+
+                       
+                        <td>
+
+                        <form method="post" action="AlterarVenda.php">
+                            <tr>
+                                <td><input name="idvenda" type="hidden" value="<?php echo $value->idvenda;?>"/> </td>          
+                                <td><input name="datavenda" type="hidden" value="<?php echo $value->datavenda;?>"/></td> 
+                                <td><input name="valortotal" type="hidden" value="<?php echo $value->valortotal;?>"/></td> 
+                                
+                                
+                            </tr>
+                                <td><button name="alterar" type="submit">Alterar</button></td>
+
+                         </form>
+<td>
+                            <form method="post" >
+                                <input name="idvenda" type="hidden" value="<?php echo $value->idvenda;?>"/>
+                                <button name="excluir" type="submit" >Excluir</button>
+                            </form>
+                        </td>
+
+                    </tr>
+                    
+                    <?php } ?>
+                </tbody>
+            </table>
+            <!-- Fim da tabela -->
+
+
+
+
+    </form>
+
+</body>
+</html>
+--------------------------------------------------------------------------------------------------------------------------------
+//Alterar
+
+<?php
+error_reporting(E_ALL);
+ini_set("display_errors", 1);
+
+require_once 'Vendas.php';
+?>
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+
+	<title>Alteração de vendas - WEB I</title>
+
+</head>
+
+<body>
+	<?php
+		//Alterar Venda
+
+		$idvenda = $_POST['idvenda'];
+		$datavenda = $_POST['datavenda'];
+		$valortotal = $_POST['valortotal'];
+	
+		if (isset($_POST['alterarDados']));
+		{
+		 $venda = new Vendas;
+
+		 	$venda->setDatavenda($datavenda);
+		 	$venda->setValortotal($valortotal);
+		 	$venda->update($idvenda);
+
+		 }
+
+		//endif;
+	?>
+
+	<form method='post' action="">
+		<br><label for='datavenda'> Data venda</label>
+            <br><input type="text" name="datavenda" value="<?php echo $datavenda;?>"/>
+		<br><br><label for='valortotal' > Valor total </label>
+			<br><input type="text" name="valortotal " value="<?php echo $valortotal ;?>"/>		
+		<input type="hidden" name="idvenda" value="<?php echo $idvenda;?>"/>
+		<br><br><input type="submit" value="AlterarDados"/><br>
+		<br><br><br><a href=ListarVenda.php>Lista de vendas</a>
+
+	</form>
+						<!-- Fim da tabela -->
+
+</body>
+</html>
+-------------------------------------------------------------------------------------------------------------------------
+
+Tabela itens vendas:
+
+<?php
+##salvar como CrudItensvendas.php
+##arquivo que implementa a tabela e seus atributos, acessa os metodos get e set
+require_once 'DB.php';    //inclui arquivo DB
+
+ abstract class CrudItensvendas extends DB {   //faz herança do arquivo DB
+    
+    //Nome da tabela e Atributos
+    protected $itens_vendas;
+    public $quantidade;
+    public $valorvenda;
+    public $desconto;
+
+    
+    public function setQuantidade($quantidade) {
+        $this->quantidade = $quantidade;
+    }
+    public function getQuantidade() {
+        return $this->quantidade;
+    }
+
+    public function setValorvenda($valorvenda) {
+        $this->valorvenda = $valorvenda;
+    }
+    public function getValorvenda() {
+        return $this->valorvenda;
+    }
+
+    public function setDesconto($desconto) {
+        $this->desconto = $desconto;
+    }
+    public function getDesconto() {
+        return $this->desconto;
+    }
+ 
+}
+
+?>
+
+-------------------------------------------------------------------------------------------------------------------------
+
+<?php
+
+/**
+ * Salvar como Itensvendas.php
+ * herda da classe crudItensvendas
+ * contem metodos basicos para criar, deletar, Lê e apagar dados no BD
+ */
+
+require_once 'CrudItensvendas.php';
+
+ class Itensvendas extends CrudItensvendas{
+    
+    protected $tabela = 'itens_vendas';  //define a tabela do banco
+
+      
+    //busca 1 item
+    public function findUnit($iditensvendas) {
+        $sql = "SELECT * FROM $this->tabela WHERE iditensvendas = :iditensvendas";
+        $stm = DB::prepare($sql);
+        $stm->bindParam(':iditensvendas', $iditensvendas, PDO::PARAM_INT);
+        $stm->execute();
+        return $stm->fetch();
+    }
+    //busca todos os itens
+    public function findAll() {
+        $sql = "SELECT * FROM $this->tabela";
+        $stm = DB::prepare($sql);
+        $stm->execute();
+        return $stm->fetchAll();
+    }
+    
+     //faz insert   
+    public function insert() {
+        $sql = "INSERT INTO $this->tabela (quantidade, valorvenda, desconto) VALUES ( :quantidade, :valorvenda, :desconto)";
+        $stm = DB::prepare($sql);
+        $stm->bindParam(':quantidade', $this->quantidade);
+        $stm->bindParam(':valorvenda', $this->valorvenda);
+        $stm->bindParam(':desconto', $this->desconto);
+        return $stm->execute();
+    }
+    
+    //update de itens
+    public function update($iditensvendas) {
+        $sql = "UPDATE $this->tabela SET  quantidade = :quantidade, valorvenda = :valorvenda, desconto = :desconto WHERE iditensvendas = :iditensvendas";
+        $stm = DB::prepare($sql);
+        $stm->bindParam(':iditensvendas', $iditensvendas, PDO::PARAM_INT);
+        $stm->bindParam(':quantidade', $this->quantidade);
+        $stm->bindParam(':valorvenda', $this->valorvenda);
+        $stm->bindParam(':desconto', $this->desconto);
+        return $stm->execute();
+    }
+    
+//deleta  1 item
+    public function delete($iditensvendas) {
+        $sql = "DELETE FROM $this->tabela WHERE iditensvendas = :iditensvendas";
+        $stm = DB::prepare($sql);
+        $stm->bindParam(':iditensvendas', $iditensvendas, PDO::PARAM_INT);
+        return $stm->execute();
+    }
+    
+}
+?>
+-------------------------------------------------------------------------------------------------------------------------
+//Cadastro
+<?php
+error_reporting(E_ALL);
+ini_set("display_errors", 1);
+
+
+    
+require_once 'Itensvendas.php';
+?>
+   
+<!DOCTYPE HTML>
+<html lang="pt-BR">
+<head>
+        <title>Cadastro de itensvendas - WEB I</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head>
+
+<body>
+   <?php
+     
+      $itensvendas = new Itensvendas;
+      if(isset($_POST['cadastrar'])):
+            $quantidade = $_POST['quantidade'];
+            $valorvenda = $_POST['valorvenda'];
+            $desconto = $_POST['desconto'];
+            
+  
+            $itensvendas->setQuantidade($quantidade);
+            $itensvendas->setValorvenda($valorvenda);
+            $itensvendas->setDesconto($desconto);
+            
+
+            if($itensvendas->insert()){
+                echo " São ". $quantidade. " itens inseridos com sucesso";
+            }
+      endif;
+    ?>
+        <form method='post' action="">            
+            <br><label for='quantidade'> Quantidade</label>
+            <br><input type="text" name="quantidade"  placeholder="Digite a quantidade de itens"/>
+            <br><label for='valorvenda'> Valor da venda </label>    
+            <br><input type="text" name="valorvenda"/>
+            <br><label for='desconto'> Desconto </label>    
+            <br><input type="text" name="desconto"/>
+            <br><br> <input type="submit" value="Cadastrar">
+            <br><br><br><a href=ListarItensvendas.php>Lista de itensvendas</a>
+        
+        </form>
+    
+</body>
+</html>
+-------------------------------------------------------------------------------------------------------------------------------------
+
+//Listar
+
+<?php
+error_reporting(E_ALL);
+ini_set("display_errors", 1);
+
+require_once 'Itensvendas.php';
+
+?>
+
+<!DOCTYPE HTML>
+<html lang="pt-BR">
+
+<head>
+        <title>Lista de itensvendas - WEB I</title>
+</head>
+
+<body>
+   
+    <!-- Inicio da tabela -->
+    <table class="table table-striped table-bordered table-hover">
+                <thead>
+                    <tr class="active">
+
+                        <th>Quantidade</th>
+                        <th>Valor venda</th>
+                        <th>Desconto</th>
+                        
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                    <?php 
+                    
+                    $itensvendas=New Itensvendas;
+
+                    //exclusao de Usuario
+                    if (isset($_POST['excluir'])){
+                                            
+                        $iditensvendas = $_POST['iditensvendas'];
+                        
+                        $itensvendas->delete($iditensvendas);
+                    }
+                                                         
+                    
+                    
+
+                    foreach ($itensvendas->findAll() as $key => $value) { ?>
+          
+                    <tr>
+                        <td> <?php echo $value->quantidade;?> </td>
+
+                        <td> <?php echo $value->valortotal;?> </td>
+
+                        <td> <?php echo $value->desconto;?> </td>
+
+
+                        <td>
+
+                        <form method="post" action="AlterarItensvenda.php">
+                            <tr>
+                                <td><input name="iditensvendas" type="hidden" value="<?php echo $value->iditensvendas;?>"/> </td>          
+                                <td><input name="quantidade" type="hidden" value="<?php echo $value->quantidade;?>"/></td> 
+                                <td><input name="valortotal" type="hidden" value="<?php echo $value->valortotal;?>"/></td> 
+                                <td><input name="desconto" type="hidden" value="<?php echo $value->desconto;?>"/></td> 
+                                
+                            </tr>
+                                <td><button name="alterar" type="submit">Alterar</button></td>
+
+                         </form>
+<td>
+                            <form method="post" >
+                                <input name="iditensvendas" type="hidden" value="<?php echo $value->iditensvendas;?>"/>
+                                <button name="excluir" type="submit" >Excluir</button>
+                            </form>
+                        </td>
+
+                    </tr>
+                    
+                    <?php } ?>
+                </tbody>
+            </table>
+            <!-- Fim da tabela -->
+
+
+
+
+    </form>
+
+</body>
+</html>
+-------------------------------------------------------------------------------------------------------------------------------------
+
+//Alterar
+
+<?php
+error_reporting(E_ALL);
+ini_set("display_errors", 1);
+
+require_once 'Itensvendas.php';
+?>
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+
+	<title>Alteração de itensvendas - WEB I</title>
+
+</head>
+
+<body>
+	<?php
+		//Alterar Cliente
+
+		$iditensvendas = $_POST['iditensvendas'];
+		$quantidade = $_POST['quantidade'];
+		$valortotal = $_POST['valortotal'];
+		$desconto = $_POST['desconto'];
+
+
+		if (isset($_POST['alterarDados']));
+		{
+		 $itensvendas = new Itensvendas;
+
+		 	$itensvendas->setQuantidade($quantidade);
+		 	$itensvendas->setValortotal($valortotal);
+		 	$itensvendas->setDesconto($desconto);
+		 	$itensvendas->update($iditensvendas);
+
+		 }
+
+		//endif;
+	?>
+
+	<form method='post' action="">
+		<br><label for='quantidade'> Quantidade</label>
+            <br><input type="text" name="quantidade" value="<?php echo $quantidade;?>"/>
+		<br><br><label for='valortotal'> Valor total</label>
+			<br><input type="text" name="valortotal" value="<?php echo $valortotal;?>"/>
+		<br><br><label for='desconto'> Desconto</label>
+			<br><input type="text" name="desconto" value="<?php echo $desconto;?>"/>
+		<input type="hidden" name="iditensvendas" value="<?php echo $iditensvendas;?>"/>
+		<br><br><input type="submit" value="AlterarDados"/><br>
+		<br><br><br><a href=ListarItensvendas.php>Lista de Itensvendas</a>
+
+	</form>
+						<!-- Fim da tabela -->
+
+</body>
+</html>
+-------------------------------------------------------------------------------------------------------------------------------------
+
+
+
